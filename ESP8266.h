@@ -4,9 +4,9 @@
 #include <Arduino.h>
 #include <IPAddress.h>
 
-//#define ESP8266_DEBUG
+#define ESP8266_DEBUG
 
-#define ESP8266_MAX_CONNECTIONS 5
+#define ESP8266_MAX_CONNECTIONS 2
 #define ESP8266_SINGLE_CLIENT 5
 
 enum ESP8266WifiMode {
@@ -201,10 +201,16 @@ public:
 
         if (id != ESP8266_SINGLE_CLIENT) {
             _serial->print(id);
-            _serial->print(F(","));
+            _serial->print(",");
         }
 
         _serial->println((sizeof(*value)*size));
+
+		ESP8266CommandStatus state = readStatus(_timeout);
+
+		if (state != ESP8266_COMMAND_OK) {
+			return state;
+		}
 
         c = timedPeek(20);
 
@@ -216,6 +222,10 @@ public:
 
         _serial->write((byte*)value, (sizeof(*value)*size));
 
+#ifdef ESP8266_DEBUG
+		Serial.println("#ESP8266 write data:");
+		Serial.write((byte*)value, (sizeof(*value)*size));
+#endif
         return readStatus(_timeout);
     }
 
@@ -234,6 +244,11 @@ public:
 
         _serial->println(sizeof(value));
 
+		ESP8266CommandStatus state = readStatus(_timeout);
+
+		if (state != ESP8266_COMMAND_OK) {
+			return state;
+		}
         c = timedPeek(20);
 
         if (c == -1)
@@ -272,6 +287,9 @@ public:
     // Available
     int available();
 
+	// get last command state
+	ESP8266CommandStatus lastStatus();
+
     // Connection id
     unsigned int getId();
 
@@ -295,6 +313,8 @@ protected:
     int _available;
 
     unsigned int _id;
+
+	ESP8266CommandStatus _lastStatus;
 
     // Clear the incomming data
     void clear();

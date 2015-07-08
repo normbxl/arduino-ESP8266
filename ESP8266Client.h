@@ -7,9 +7,9 @@
 class ESP8266Client : public Client
 {
 public:
-    ESP8266Client(ESP8266& esp8266) : Client(), _esp8266(&esp8266), _id(0), _connected(false)  {}
+    ESP8266Client(ESP8266& esp8266) : Client(), _esp8266(&esp8266), _id(0), _connected(false), _bufferPrint(false)  {}
 
-    ESP8266Client(ESP8266& esp8266, unsigned int id) : Client(), _esp8266(&esp8266), _id(id), _connected(false)  {}
+    ESP8266Client(ESP8266& esp8266, unsigned int id) : Client(), _esp8266(&esp8266), _id(id), _connected(false), _bufferPrint(false)  {}
 
     // Prepare the client
     bool begin();
@@ -40,14 +40,19 @@ public:
     void stop();
 
     // Connected
-    uint8_t connected();
+	uint8_t connected();
+
+	void buffering(bool doBuffer);
+	size_t sendBuffer();
+
 
     // Connected
-    operator bool();
+	operator bool();
 
 protected:
     ESP8266* _esp8266;
-
+	bool _bufferPrint;
+	String _printBuffer;
     unsigned int _id;
 
     bool _connected;

@@ -52,6 +52,10 @@ int ESP8266Client::read(uint8_t* buffer, size_t size)
 
 size_t ESP8266Client::write(uint8_t b)
 {
+	if (_bufferPrint) {
+		_printBuffer += (char)b;
+		return 1;
+	}
     ESP8266CommandStatus status = _esp8266->send(_id, &b, 1);
 
     if (status == ESP8266_COMMAND_NO_LINK)
@@ -65,6 +69,11 @@ size_t ESP8266Client::write(uint8_t b)
 
 size_t ESP8266Client::write(const char* data)
 {
+	if (_bufferPrint) {
+		_printBuffer += data;
+		return strlen(data);
+	}
+
     ESP8266CommandStatus status = _esp8266->send(_id, data);
 
     if (status == ESP8266_COMMAND_NO_LINK)
@@ -76,8 +85,15 @@ size_t ESP8266Client::write(const char* data)
     return strlen(data);
 }
 
+
+
 size_t ESP8266Client::write(const uint8_t* buffer, size_t size)
 {
+	if (_bufferPrint) {
+		_printBuffer.concat((char*)buffer);
+		return size;
+	}
+
     ESP8266CommandStatus status = _esp8266->send(_id, buffer, size);
 
     if (status == ESP8266_COMMAND_NO_LINK)
@@ -87,6 +103,27 @@ size_t ESP8266Client::write(const uint8_t* buffer, size_t size)
         return 0;
 
     return size;
+}
+
+void ESP8266Client::buffering(bool doBuffer) {
+	
+	if (doBuffer) {
+		_printBuffer = String("");
+	}
+	_bufferPrint = doBuffer;
+}
+
+size_t ESP8266Client::sendBuffer() {
+	ESP8266CommandStatus status = _esp8266->send(_id, _printBuffer.c_str());
+
+	if (status == ESP8266_COMMAND_NO_LINK)
+		_connected = false;
+
+	if (status != ESP8266_COMMAND_OK)
+		return 0;
+	size_t size = _printBuffer.length();
+	_printBuffer = String();
+	return size;
 }
 
 int ESP8266Client::peek()

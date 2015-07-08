@@ -321,17 +321,17 @@ ESP8266CommandStatus ESP8266::getIP(ESP8266WifiMode mode, IPAddress& ip)
 
     switch (mode) {
     case ESP8266_WIFI_STATION:
-        _serial->println(F("AT+CIPSTA?"));
+        _serial->println(F("AT+CIFSR"));
 
-        if (!find(F("+CIPSTA:\""), 20))
+        if (!find(F("+CIFSR:STAIP:\""), 20))
             return ESP8266_COMMAND_TIMEOUT;
 
         break;
 
     case ESP8266_WIFI_ACCESSPOINT:
-        _serial->println(F("AT+CIPAP?"));
+        _serial->println(F("AT+CIFSR"));
 
-        if (!find(F("+CIPAP:\""), 20))
+        if (!find(F("+CIFSR:APIP:\""), 20))
             return ESP8266_COMMAND_TIMEOUT;
 
         break;
@@ -624,6 +624,10 @@ size_t ESP8266::write(uint8_t b)
     return 1;
 }
 
+ESP8266CommandStatus ESP8266::lastStatus() {
+	return _lastStatus;
+}
+
 /****************************************/
 /******           Private          ******/
 /****************************************/
@@ -833,7 +837,8 @@ ESP8266CommandStatus ESP8266::readStatus(unsigned int timeout)
 {
     const char* statuses[] = {"OK\r\n", "no change\r\n", "ERROR\r\n", "link is not\r\n", "too long\r\n", "FAIL\r\n", "ALREAY CONNECT\r\n"};
 
-    return (ESP8266CommandStatus)findStrings(statuses, 7, false, timeout);
+	_lastStatus = (ESP8266CommandStatus)findStrings(statuses, 7, false, timeout);
+	return _lastStatus;
 }
 
 bool ESP8266::find(const __FlashStringHelper* target)
