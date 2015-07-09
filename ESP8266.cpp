@@ -318,20 +318,19 @@ ESP8266CommandStatus ESP8266::setIP(ESP8266WifiMode mode, IPAddress& ip)
 ESP8266CommandStatus ESP8266::getIP(ESP8266WifiMode mode, IPAddress& ip)
 {
     clear();
+	_serial->println(F("AT+CIFSR"));
 
     switch (mode) {
     case ESP8266_WIFI_STATION:
-        _serial->println(F("AT+CIFSR"));
-
-        if (!find(F("+CIFSR:STAIP:\""), 20))
+        
+        if (!find(F(":STAIP,\""), 20))
             return ESP8266_COMMAND_TIMEOUT;
 
         break;
 
     case ESP8266_WIFI_ACCESSPOINT:
-        _serial->println(F("AT+CIFSR"));
-
-        if (!find(F("+CIFSR:APIP:\""), 20))
+        
+        if (!find(F(":APIP,\""), 20))
             return ESP8266_COMMAND_TIMEOUT;
 
         break;
@@ -697,9 +696,9 @@ int ESP8266::timedRead(unsigned int timeout)
 #ifdef ESP8266_DEBUG
 
             if (millis() - startMillis > 20) {
-                Serial.print(F("==> Read: "));
-                Serial.print(millis() - startMillis);
-                Serial.println(F("ms"));
+                _dbg->print(F("==> Read: "));
+                _dbg->print(millis() - startMillis);
+                _dbg->println(F("ms"));
             }
 
 #endif
@@ -758,9 +757,9 @@ int ESP8266::timedPeek(unsigned int timeout)
 #ifdef ESP8266_DEBUG
 
             if (millis() - startMillis > 20) {
-                Serial.print(F("==> Peek: "));
-                Serial.print(millis() - startMillis);
-                Serial.println(F("ms"));
+                _dbg->print(F("==> Peek: "));
+                _dbg->print(millis() - startMillis);
+                _dbg->println(F("ms"));
             }
 
 #endif
@@ -835,7 +834,7 @@ void ESP8266::parseMACAddress(byte* mac, unsigned int timeout)
 
 ESP8266CommandStatus ESP8266::readStatus(unsigned int timeout)
 {
-    const char* statuses[] = {"OK\r\n", "no change\r\n", "ERROR\r\n", "link is not\r\n", "too long\r\n", "FAIL\r\n", "ALREAY CONNECT\r\n"};
+	const char* statuses[] = {"OK\r\n", "no change\r\n", "ERROR\r\n", "link is not\r\n", "too long\r\n", "FAIL\r\n", "ALREAY CONNECT\r\n", "UNLINK\r\n"};
 
 	_lastStatus = (ESP8266CommandStatus)findStrings(statuses, 7, false, timeout);
 	return _lastStatus;
@@ -856,7 +855,7 @@ bool ESP8266::find(const __FlashStringHelper* target, unsigned int timeout)
     while ((c = timedRead(timeout)) >= 0) {
 
 #ifdef ESP8266_DEBUG
-        Serial.write(c);
+        _dbg->write(c);
 #endif
 
         // match magic
@@ -920,7 +919,7 @@ int ESP8266::findStrings(const char** strings, unsigned int count, bool strict, 
         match = false;
 
 #ifdef ESP8266_DEBUG
-        Serial.write(c);
+        _dbg->write(c);
 #endif
 
         // loop over possible strings

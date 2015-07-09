@@ -69,7 +69,12 @@ struct ESP8266Station {
 class ESP8266 : public Stream
 {
 public:
+
+#ifdef ESP8266_DEBUG
+	ESP8266(Stream& serial, Stream& dbg) : Stream(), _serial(&serial), _dbg(&dbg) {}
+#else
     ESP8266(Stream& serial) : Stream(), _serial(&serial) {}
+#endif
 
     // Prepare the module
     bool begin();
@@ -223,8 +228,8 @@ public:
         _serial->write((byte*)value, (sizeof(*value)*size));
 
 #ifdef ESP8266_DEBUG
-		Serial.println("#ESP8266 write data:");
-		Serial.write((byte*)value, (sizeof(*value)*size));
+		_dbg->println("#ESP8266 write data:");
+		_dbg->write((byte*)value, (sizeof(*value)*size));
 #endif
         return readStatus(_timeout);
     }
@@ -309,6 +314,7 @@ public:
 
 protected:
     Stream* _serial;
+	Stream* _dbg;
 
     int _available;
 
