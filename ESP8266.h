@@ -4,7 +4,9 @@
 #include <Arduino.h>
 #include <IPAddress.h>
 
-#define ESP8266_DEBUG
+#ifdef DEBUG
+ #define ESP8266_DEBUG
+#endif
 
 #define ESP8266_MAX_CONNECTIONS 2
 #define ESP8266_SINGLE_CLIENT 5
